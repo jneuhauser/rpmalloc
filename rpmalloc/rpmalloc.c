@@ -604,6 +604,9 @@ _memory_heap_lookup(int32_t id) {
 static void
 _memory_heap_cache_insert(heap_t* heap, span_t* span);
 
+static void
+_memory_global_cache_insert(span_t* span);
+
 //! Map more virtual memory
 static void*
 _memory_map(size_t size, size_t* offset) {
@@ -681,7 +684,7 @@ _memory_span_initialize(span_t* span, size_t total_span_count, size_t span_count
 	atomic_store32(&span->remaining_spans, (int32_t)total_span_count);	
 }
 
-//! Map a akigned set of spans, taking configured mapping granularity and the page size into account
+//! Map an aligned set of spans, taking configured mapping granularity and the page size into account
 static span_t*
 _memory_map_aligned_span_count(heap_t* heap, size_t span_count) {
 	//If we already have some, but not enough, reserved spans, release those to heap cache and map a new
@@ -696,11 +699,13 @@ _memory_map_aligned_span_count(heap_t* heap, size_t span_count) {
 	if (span_count <= LARGE_CLASS_COUNT)
 		_memory_statistics_inc(heap->span_use[span_count - 1].spans_map_calls, 1);
 	if (aligned_span_count > span_count) {
+		span_t* reserved_spans = pointer_offset(span, span_count * _memory_span_size);
+		size_t reserved_count = aligned_span_count - span_count;
 		if (heap->spans_reserved) {
 			_memory_span_mark_as_subspan_unless_master(heap->span_reserve_master, heap->span_reserve, heap->spans_reserved);
 			_memory_heap_cache_insert(heap, heap->span_reserve);
 		}
-		_memory_heap_set_reserved_spans(heap, span, pointer_offset(span, span_count * _memory_span_size), aligned_span_count - span_count);
+		_memory_heap_set_reserved_spans(heap, span, reserved_spans, reserved_count);
 	}
 	return span;
 }
