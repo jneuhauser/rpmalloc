@@ -9,6 +9,9 @@ Added a missing null check in the non-hot allocation code paths
 
 Fixed compilation issue on macOS when ENABLE_PRELOAD is set but not ENABLE_OVERRIDE
 
+Update ninja build generator to support gcc/clang cross compilation through environment variable
+overrides (CC, CXX, CFLAGS, CXXFLAGS, ARFLAGS, LDFLAGS)
+
 
 1.4.0
 
